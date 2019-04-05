@@ -16,9 +16,6 @@ import android.widget.Toast;
 import android.content.Context;
 import android.text.TextUtils;
 
-import com.devmarvel.creditcardentry.fields.SecurityCodeText;
-import com.devmarvel.creditcardentry.library.CreditCard;
-import com.devmarvel.creditcardentry.library.CreditCardForm;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.WritableMap;
@@ -34,6 +31,9 @@ import com.stripe.android.model.Card;
 import com.stripe.android.model.Source;
 import com.stripe.android.model.SourceParams;
 import com.stripe.android.model.Token;
+import com.stripe.android.view.CardInputListener;
+import com.stripe.android.view.CardInputWidget;
+import com.stripe.android.view.StripeEditText;
 
 /**
  * Created by dmitriy on 11/13/16
@@ -47,7 +47,6 @@ public class AddCardDialogFragment extends DialogFragment {
 
   private static final String CREATE_CARD_SOURCE_KEY = "CREATE_CARD_SOURCE_KEY";
   private static final String TAG = AddCardDialogFragment.class.getSimpleName();
-  private static final String CCV_INPUT_CLASS_NAME = SecurityCodeText.class.getSimpleName();
 
   private String PUBLISHABLE_KEY;
   private String errorCode;
@@ -55,7 +54,7 @@ public class AddCardDialogFragment extends DialogFragment {
   private boolean CREATE_CARD_SOURCE;
 
   private ProgressBar progressBar;
-  private CreditCardForm from;
+  private CardInputWidget mCardInputWidget;
   private ImageView imageFlipedCard;
   private ImageView imageFlipedCardBack;
 
@@ -122,7 +121,6 @@ public class AddCardDialogFragment extends DialogFragment {
     });
     doneButton.setTextColor(ContextCompat.getColor(getActivity(), R.color.colorAccent));
     dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ContextCompat.getColor(getActivity(), R.color.colorAccent));
-    doneButton.setEnabled(false);
 
     bindViews(view);
     init();
@@ -141,42 +139,44 @@ public class AddCardDialogFragment extends DialogFragment {
 
   private void bindViews(final View view) {
     progressBar = (ProgressBar) view.findViewById(R.id.buttonProgress);
-    from = (CreditCardForm) view.findViewById(R.id.credit_card_form);
+    mCardInputWidget = (CardInputWidget) view.findViewById(R.id.card_input_widget);
     imageFlipedCard = (ImageView) view.findViewById(R.id.imageFlippedCard);
     imageFlipedCardBack = (ImageView) view.findViewById(R.id.imageFlippedCardBack);
   }
 
 
   private void init() {
-    from.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+    mCardInputWidget.setCardInputListener(new CardInputListener() {
       @Override
-      public void onFocusChange(final View view, boolean b) {
-        if (CCV_INPUT_CLASS_NAME.equals(view.getClass().getSimpleName())) {
-          if (b) {
+      public void onFocusChange(String focusField) {
+        if(focusField.equals(FocusField.FOCUS_CVC)) {
+          if(cardFlipAnimator.getCurrentSide() == CardFlipAnimator.Side.FRONT) {
             cardFlipAnimator.showBack();
-            if (view.getTag() == null) {
-              view.setTag("TAG");
-              ((SecurityCodeText) view).addTextChangedListener(new TextWatcher() {
-                @Override
-                public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                  //unused
-                }
-
-                @Override
-                public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                  doneButton.setEnabled(charSequence.length() >= 3);
-                }
-
-                @Override
-                public void afterTextChanged(Editable editable) {
-                  //unused
-                }
-              });
-            }
-          } else {
+          }
+        } else {
+          if(cardFlipAnimator.getCurrentSide() == CardFlipAnimator.Side.BACK) {
             cardFlipAnimator.showFront();
           }
         }
+      }
+
+      @Override
+      public void onCardComplete() {
+
+      }
+
+      @Override
+      public void onExpirationComplete() {
+
+      }
+
+      @Override
+      public void onCvcComplete() {
+
+      }
+
+      @Override
+      public void onPostalCodeComplete() {
 
       }
     });
@@ -188,12 +188,14 @@ public class AddCardDialogFragment extends DialogFragment {
   public void onSaveCLick() {
     doneButton.setEnabled(false);
     progressBar.setVisibility(View.VISIBLE);
-    final CreditCard fromCard = from.getCreditCard();
-    final Card card = new Card(
-      fromCard.getCardNumber(),
-      fromCard.getExpMonth(),
-      fromCard.getExpYear(),
-      fromCard.getSecurityCode());
+    final Card card = mCardInputWidget.getCard();
+
+    if(card == null) {
+      doneButton.setEnabled(true);
+      progressBar.setVisibility(View.GONE);
+      Toast.makeText(getActivity(), "Please check card info.", Toast.LENGTH_SHORT).show();
+      return;
+    }
 
     String errorMessage = Utils.validateCard(card);
     if (errorMessage == null) {

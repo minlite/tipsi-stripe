@@ -21,10 +21,18 @@ public class CardFlipAnimator {
     private Animator animator3;
     private Animator animator4;
 
+    public enum Side {
+        FRONT,
+        BACK
+    }
+
+    private Side currentSide;
+
     public CardFlipAnimator(final Context context, final ImageView imageViewCardFront, final ImageView imageViewCardBack){
         this.context = context;
         this.imageViewCardFront = imageViewCardFront;
         this.imageViewCardBack = imageViewCardBack;
+        this.currentSide = Side.FRONT;
         init();
     }
 
@@ -40,12 +48,18 @@ public class CardFlipAnimator {
     }
 
     public void showBack(){
+        this.currentSide = Side.BACK;
         animator1.start();
         animator2.start();
     }
 
     public void showFront(){
+        this.currentSide = Side.FRONT;
         animator3.start();
         animator4.start();
+    }
+
+    public Side getCurrentSide() {
+        return currentSide;
     }
 }

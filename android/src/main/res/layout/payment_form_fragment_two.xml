@@ -47,18 +47,13 @@
         android:paddingLeft="@dimen/activity_horizontal_margin"
         android:paddingRight="@dimen/activity_horizontal_margin"/>
 
-    <com.devmarvel.creditcardentry.library.CreditCardForm
-        android:id="@+id/credit_card_form"
-        android:layout_width="wrap_content"
+    <com.stripe.android.view.CardInputWidget
+        android:id="@+id/card_input_widget"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingLeft="@dimen/activity_horizontal_margin"
         android:paddingRight="@dimen/activity_horizontal_margin"
-        android:paddingTop="8dp"
-        app:include_helper="true"
-        app:include_zip="false"
-        app:input_background="@color/transparent_background"
-        app:cursor_color="@color/colorAccent"
-        app:text_size="18sp"/>
+        />
 
     <ProgressBar
         android:id="@+id/buttonProgress"
