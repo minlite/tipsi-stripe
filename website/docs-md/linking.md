@@ -4,6 +4,8 @@ title: Linking
 sidebar_label: Linking
 ---
 
+> **Note** Linking on Windows system currently isn't working. Feel free to fix it and remove this warning from docs
+
 ## Automatically
 
 Run `react-native link tipsi-stripe` so your project is linked against your Xcode project and all CocoaPods dependencies are installed.
@@ -72,6 +74,12 @@ protected List <ReactPackage> getPackages() {
   );
 }
 ```
+
+If enabling minification in your `app/build.gradle` file, you must also add the following line to `proguard-rules.pro`:
+```diff
++ -keep class com.stripe.android.** { *; }
+```
+You can check [Stripe Android SDK](https://github.com/stripe/stripe-android#installation) for detail.
 
 **Ensure that you have Google Play Services installed.**
 
